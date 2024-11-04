@@ -1,0 +1,11 @@
+{
+    "name": "screen-studio",
+    "version": "1.0.0",
+    "main": "main.js",
+    "scripts": {
+        "start": "electron ."
+    },
+    "dependencies": {
+        "electron": "^25.3.1"
+    }
+}
