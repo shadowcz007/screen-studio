@@ -1,5 +1,6 @@
 // renderer.js
 const { ipcRenderer } = require('electron')
+const fs = require('fs')
 
 let mediaRecorder
 let recordedChunks = []
@@ -96,14 +97,18 @@ async function handleStop() {
         type: 'video/webm;codecs=vp9'
     })
 
-    // 直接使用未压缩的视频
+    // 保存录制数据到recording_data.json
+    const arrayBuffer = await blob.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+    fs.writeFileSync('recording_data.json', JSON.stringify(buffer))
+
+    // 播放录制的视频
     const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    document.body.appendChild(a)
-    a.style = 'display: none'
-    a.href = url
-    a.download = 'screen-recording.webm'
-    a.click()
+    preview.srcObject = null
+    preview.src = url
+    preview.play().catch(error => {
+        console.error('Error playing recorded video:', error)
+    })
 
     recordedChunks = []
 }
@@ -118,7 +123,7 @@ function getVideoConstraints(sourceId) {
         '720p': { width: 1280, height: 720 }
     }
 
-    return {
+    const constraints = {
         mandatory: {
             chromeMediaSource: 'desktop',
             chromeMediaSourceId: sourceId,
@@ -130,14 +135,20 @@ function getVideoConstraints(sourceId) {
         },
         hardware_acceleration: true
     }
+
+    console.log('Video Constraints:', constraints)
+    return constraints
 }
 
 function getRecorderOptions() {
     const bitrate = parseInt(document.getElementById('bitrate').value)
-    return {
+    const options = {
         mimeType: 'video/webm;codecs=vp9',
         videoBitsPerSecond: bitrate
     }
+
+    console.log('Recorder Options:', options)
+    return options
 }
 
 // 开始追踪输入
