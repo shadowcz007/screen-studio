@@ -90,41 +90,14 @@ function handleDataAvailable(e) {
     recordedChunks.push(e.data)
 }
 
-async function compressVideo(blob) {
-    // 使用动态导入来加载ffmpeg.js
-    const ffmpeg = await import('@ugoira/ffmpeg.js')
-
-    // 将blob转换为ArrayBuffer
-    const arrayBuffer = await blob.arrayBuffer()
-
-    // 使用ffmpeg压缩视频
-    const result = ffmpeg({
-        MEMFS: [{ name: "input.webm", data: new Uint8Array(arrayBuffer) }],
-        arguments: [
-            "-i", "input.webm",
-            "-c:v", "libvpx-vp9",
-            "-crf", "30", // 控制质量，值越小质量越高
-            "-b:v", "0", // 使用CRF模式
-            "-deadline", "good", // 编码速度与质量的平衡
-            "output.webm"
-        ]
-    })
-
-    // 获取压缩后的视频数据
-    const output = result.MEMFS[0]
-    return new Blob([output.data], { type: 'video/webm' })
-}
-
 // 修改handleStop函数
 async function handleStop() {
     const blob = new Blob(recordedChunks, {
         type: 'video/webm;codecs=vp9'
     })
 
-    // 压缩视频
-    const compressedBlob = await compressVideo(blob)
-
-    const url = URL.createObjectURL(compressedBlob)
+    // 直接使用未压缩的视频
+    const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     document.body.appendChild(a)
     a.style = 'display: none'
