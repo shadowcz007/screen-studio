@@ -6,6 +6,7 @@ let recordedChunks = []
 const startBtn = document.getElementById('startBtn')
 const stopBtn = document.getElementById('stopBtn')
 const preview = document.getElementById('preview')
+let currentSourceId
 
 // 开始录制
 startBtn.onclick = () => {
@@ -14,12 +15,13 @@ startBtn.onclick = () => {
 
 // 停止录制
 stopBtn.onclick = () => {
-    mediaRecorder.stop()
+    stopRecording()
     ipcRenderer.send('stop-recording')
 }
 
 // 设置视频源
 ipcRenderer.on('SET_SOURCE', async(event, sourceId) => {
+    currentSourceId = sourceId
     try {
         // renderer.js 中修改 getUserMedia 的配置
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -38,7 +40,7 @@ ipcRenderer.on('SET_SOURCE', async(event, sourceId) => {
         })
 
         handleStream(stream)
-        startRecording(stream)
+        startRecording(sourceId)
     } catch (e) {
         console.error(e)
     }
@@ -47,7 +49,11 @@ ipcRenderer.on('SET_SOURCE', async(event, sourceId) => {
 // 处理视频流
 function handleStream(stream) {
     preview.srcObject = stream
-    preview.play()
+    preview.onloadedmetadata = () => {
+        preview.play().catch(error => {
+            console.error('Error playing video:', error)
+        })
+    }
 }
 
 // 开始录制
@@ -72,14 +78,21 @@ async function startRecording(sourceId) {
     }
 }
 
+// 停止录制
+function stopRecording() {
+    if (mediaRecorder) {
+        mediaRecorder.stop()
+    }
+}
+
 // 处理录制数据
 function handleDataAvailable(e) {
     recordedChunks.push(e.data)
 }
 
-
 async function compressVideo(blob) {
-    const ffmpeg = require('ffmpeg.js')
+    // 使用动态导入来加载ffmpeg.js
+    const ffmpeg = await import('@ugoira/ffmpeg.js')
 
     // 将blob转换为ArrayBuffer
     const arrayBuffer = await blob.arrayBuffer()
@@ -121,8 +134,6 @@ async function handleStop() {
 
     recordedChunks = []
 }
-
-
 
 function getVideoConstraints(sourceId) {
     const resolution = document.getElementById('resolution').value

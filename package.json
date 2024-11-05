@@ -1,11 +1,12 @@
 {
-    "name": "screen-studio",
-    "version": "1.0.0",
-    "main": "main.js",
-    "scripts": {
-        "start": "electron ."
-    },
-    "dependencies": {
-        "electron": "^25.3.1"
-    }
+  "name": "screen-studio",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "@ugoira/ffmpeg.js": "^4.4.5-1",
+    "electron": "^25.3.1"
+  }
 }
